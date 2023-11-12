@@ -11,6 +11,7 @@ public class GenetischerAlgorithmus extends JFrame{
 
     private int imageIndex = 0;
     private BildManager bildManager = new BildManager();
+    private List<BufferedImage> listOfModelImages = bildManager.simulate();
     private BufferedImage randomBild = bildManager.createNewImage();
     private List<BufferedImage> bildListe = bildManager.getImageList();
    /* private List<ImageIcon> imageIconListe = new ArrayList<>();
@@ -30,6 +31,7 @@ public class GenetischerAlgorithmus extends JFrame{
         setVisible(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
+
         run();
     }
 
@@ -41,7 +43,7 @@ public class GenetischerAlgorithmus extends JFrame{
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 imageIndex++;
-                bild.setIcon(new ImageIcon(bildManager.getImageByIndex(imageIndex)));
+                bild.setIcon(new ImageIcon(listOfModelImages.get(imageIndex)));
             }
         });
 
@@ -51,24 +53,24 @@ public class GenetischerAlgorithmus extends JFrame{
                 if(imageIndex!=0) {
                     imageIndex--;
                 }
-                bild.setIcon(new ImageIcon(bildManager.getImageByIndex(imageIndex)));
+                bild.setIcon(new ImageIcon(listOfModelImages.get(imageIndex)));
             }
         });
 
         start.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-               // imageIndex = 0;
+                imageIndex = 0;
                 //bild.setIcon(new ImageIcon(bildManager.getImageByIndex(imageIndex)));
-                bild.setIcon(new ImageIcon(bildManager.createNewImage()));
+                bild.setIcon(new ImageIcon(listOfModelImages.get(0)));
             }
         });
 
         end.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                imageIndex = bildListe.size() - 1;
-                bild.setIcon(new ImageIcon(bildManager.getImageByIndex(imageIndex)));
+                imageIndex = listOfModelImages.size() - 1;
+                bild.setIcon(new ImageIcon(listOfModelImages.get(imageIndex)));
             }
         });
     }
