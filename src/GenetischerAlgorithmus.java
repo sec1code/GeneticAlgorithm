@@ -27,7 +27,8 @@ public class GenetischerAlgorithmus extends JFrame{
         setContentPane(mainPanel);
         setFocusable(false);
         setTitle("Genetischer Algorithmus");
-        setSize(1920,1080);
+        //setSize(1920,1080);
+        setSize(Toolkit.getDefaultToolkit().getScreenSize());
         setVisible(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
@@ -42,8 +43,13 @@ public class GenetischerAlgorithmus extends JFrame{
         forward.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                imageIndex++;
+                if(imageIndex != listOfModelImages.size() - 1) {
+                    imageIndex++;
+                }
+
+                System.out.println("ImageIndex: " + imageIndex);
                 bild.setIcon(new ImageIcon(listOfModelImages.get(imageIndex)));
+
             }
         });
 

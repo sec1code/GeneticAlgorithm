@@ -1,4 +1,4 @@
-/*TODO: - scale small images
+/*TODO: - scale small images ----------------------DONE------------------------
         - gucken warum die bilder nicht richtig sind (debug)
         - always display original image
         - display text with the generation number
