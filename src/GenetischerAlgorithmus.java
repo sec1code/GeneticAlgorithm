@@ -23,7 +23,11 @@ public class GenetischerAlgorithmus extends JFrame{
     private JButton rewind;
     private JButton forward;
     private JButton end;
+
+
+
     public GenetischerAlgorithmus() {
+
         setContentPane(mainPanel);
         setFocusable(false);
         setTitle("Genetischer Algorithmus");
@@ -38,6 +42,9 @@ public class GenetischerAlgorithmus extends JFrame{
 
     private void run() {
         JLabel bild = new JLabel(new ImageIcon(bildManager.getImageByIndex(imageIndex)));
+        JLabel originalBild = new JLabel(new ImageIcon(bildManager.getOrginalImageSized()));
+        originalBild.setSize(500, 500);
+        bild.setSize(1400, 700);
         BildPanel.add(bild);
 
         forward.addActionListener(new ActionListener() {

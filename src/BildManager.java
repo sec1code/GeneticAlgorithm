@@ -3,6 +3,8 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.nio.Buffer;
@@ -16,9 +18,8 @@ public class BildManager {
     //die mutationsrate
     private final double mutationRate = 1.0;
     //die Nummer an "Nachfahren" in der nächsten Generation
-    private final int numberOfOffspring = 8;
+    private final int numberOfOffspring = 100;
     //der Faktor mit dem die Bilder skaliert werden
-    private final int scaleFactor;
     private File f;
 
     //um ehrlich zu sein, ich weiß nicht mehr, wozu es diese Liste gibt.
@@ -33,7 +34,7 @@ public class BildManager {
     private BufferedImage originalImage;
 
     //das vorbild bild / das zurzeit beste bild
-    private BufferedImage modelImage;
+
     private List<BufferedImage> offspring;
 
     //List der Bilder die als Vorbild für eine Generation genommen wurden
@@ -56,42 +57,46 @@ public class BildManager {
         for(int i = 0; i < numberOfOffspring; i++) {
             offspring.add(randomizeImage(createNewImage()));
         }
-        modelImage = originalImage;
         listOfModelImages = new ArrayList<>();
         scaledListOfModelImages = new ArrayList<>();
-        scaleFactor = calculateScale();
     }
 
     // returns the modelImage
     public List<BufferedImage> simulate() {
+        BufferedImage modelImage = deepCopy(originalImage);
+        ArrayList<BufferedImage> mutatedImages = new ArrayList<>();
         //Artificial cap, so that the programm can stop even if fitness != 0
+        int bestFitnessScore = getFitness(offspring.get(0));
         while(fitness > 0) {
-            if(generations >= 100) {
+            mutatedImages = new ArrayList<>();
+            if(generations >= 500) {
                 break;
             }
 
-            int bestFitnessScore = getFitness(offspring.get(0));
-            for(BufferedImage image : offspring) {
+
+            for(int j = 0; j < offspring.size(); j++) {
                 //images mutate
                 for(int i = 0; i < (int) mutationRate; i++) {
                     double fixMutationRate = (mutationRate * 10);
                     if(fixMutationRate >= getRandomNumber(0, 10)) {
-                        image = mutate(image);
+                        mutatedImages.add(deepCopy(mutate(offspring.get(j))));
                     }
                 }
 
                 //calculating fitness values + setting new model image
-                int temporaryFitnessScore = getFitness(image);
+                int temporaryFitnessScore = getFitness(deepCopy(mutatedImages.get(j)));
                 if(temporaryFitnessScore < bestFitnessScore) {
                     bestFitnessScore = temporaryFitnessScore;
-                    modelImage = image;
+                    modelImage = deepCopy(mutatedImages.get(j));
                 }
             }
             //creating new offspring off of modelImage
             fitness = bestFitnessScore;
-            createOffSpring(modelImage);
+            //offspring = (List<BufferedImage>) mutatedImages.clone();
+            createOffSpring(deepCopy(modelImage));
             generations++;
-            listOfModelImages.add(modelImage);
+            listOfModelImages.add(deepCopy(modelImage));
+            System.out.println(fitness);
         }
         setScaledListOfModelImages();
         return scaledListOfModelImages;
@@ -99,10 +104,9 @@ public class BildManager {
 
     public void createOffSpring(BufferedImage modelImage) {
         offspring.clear();
-        BufferedImage offspringImage;
-        offspringImage = modelImage;
+        BufferedImage offspringImage = deepCopy(modelImage);
         for(int i = 0; i < numberOfOffspring; i++) {
-            offspring.add(offspringImage);
+            offspring.add(deepCopy(offspringImage));
         }
     }
 
@@ -153,14 +157,15 @@ public class BildManager {
     }
 
     private BufferedImage randomizeImage(BufferedImage imageToBeRandomized) {
+        BufferedImage rtrnImage = deepCopy(imageToBeRandomized);
         for (int y = 0; y < originalImage.getWidth(); y++) {
             for (int x = 0; x < originalImage.getHeight(); x++) {
                 //System.out.println(x + "|" + y);
                 int colour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()-1));
-                imageToBeRandomized.setRGB(y, x, colour);
+                rtrnImage.setRGB(y, x, colour);
             }
         }
-        return imageToBeRandomized;
+        return rtrnImage;
     }
 
     public BufferedImage mutate(BufferedImage imageToBeMutated) {
@@ -168,7 +173,6 @@ public class BildManager {
         int randomYCoord = getRandomNumber(0, originalImage.getHeight());
         int randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size() - 1));
 
-        System.out.println("X: " + randomXCoord + "Y: "+ randomYCoord + "Colour" + randomColour);
 
         BufferedImage mutatedImage = imageToBeMutated;
         mutatedImage.setRGB(randomXCoord, randomYCoord, randomColour);
@@ -186,8 +190,8 @@ public class BildManager {
         }
         return fitnessOfImg;
     }
-    public BufferedImage getOrginalImage() {
-        return originalImage;
+    public BufferedImage getOrginalImageSized() {
+        return scaleImage(originalImage, calculateScale(500, 50));
     }
 
     public List<BufferedImage> getImageList() {
@@ -202,16 +206,16 @@ public class BildManager {
         return (int) ((Math.random() * (max - min)) + min);
     }
 
-    public BufferedImage scaleImage(BufferedImage imageToBeScaled) {
+    public BufferedImage scaleImage(BufferedImage imageToBeScaled, int scaleFactor) {
         int w = imageToBeScaled.getWidth();
         int h = imageToBeScaled.getHeight();
-        Image newImage = imageToBeScaled.getScaledInstance(w * scaleFactor, h * scaleFactor, Image.SCALE_DEFAULT);
+        Image newImage = deepCopy(imageToBeScaled).getScaledInstance(w * scaleFactor, h * scaleFactor, Image.SCALE_DEFAULT);
         return convertToBufferedImage(newImage);
     }
 
     public void setScaledListOfModelImages() {
         for(BufferedImage image : listOfModelImages) {
-            scaledListOfModelImages.add(scaleImage(image));
+            scaledListOfModelImages.add(scaleImage(image, calculateScale(-1, -1)));
         }
     }
 
@@ -226,11 +230,19 @@ public class BildManager {
         return newImage;
     }
 
-    public int calculateScale() {
+    public int calculateScale(int tempWidth, int tempHeight) {
+        int tempoWidth = tempWidth;
+        int tempoHeight = tempHeight;
+        final int DEFAULTWIDTH = 1400;
+        final int DEFAULTHEIGHT = 700;
+        if(tempWidth < 0 ||tempHeight < 0) {
+            tempoWidth = DEFAULTWIDTH;
+            tempoHeight = DEFAULTHEIGHT;
+        }
         int temporaryScaleFactor = 1;
         int temporaryHeight = originalImage.getHeight();
         int temporaryWidth = originalImage.getWidth();
-        while(temporaryWidth <= 1400 && temporaryHeight <= 700) {
+        while(temporaryWidth <= tempoWidth && temporaryHeight <= tempoHeight) {
             //increment the scaleFactor;
             temporaryScaleFactor++;
 
@@ -245,6 +257,12 @@ public class BildManager {
             temporaryHeight*=temporaryScaleFactor;
         }
         return temporaryScaleFactor - 1;
+    }
+    private BufferedImage deepCopy(BufferedImage bi) {
+        ColorModel cm = bi.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = bi.copyData(null);
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
 
     public List<BufferedImage> getScaledListOfModelImages() {
