@@ -1,14 +1,10 @@
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +14,7 @@ public class BildManager {
     //die mutationsrate
     private final double mutationRate = 1.0;
     //die Nummer an "Nachfahren" in der nächsten Generation
-    private final int numberOfOffspring = 100;
+    private final int numberOfOffspring = 500;
     //der Faktor mit dem die Bilder skaliert werden
     private File f;
 
@@ -54,8 +50,9 @@ public class BildManager {
         f = null;
         loadBildListe();
 
+        BufferedImage randomImage = randomizeImage(deepCopy(originalImage));
         for(int i = 0; i < numberOfOffspring; i++) {
-            offspring.add(randomizeImage(createNewImage()));
+            offspring.add(deepCopy(deepCopy(randomImage)));
         }
         listOfModelImages = new ArrayList<>();
         scaledListOfModelImages = new ArrayList<>();
@@ -63,47 +60,41 @@ public class BildManager {
 
     // returns the modelImage
     public List<BufferedImage> simulate() {
+        int bestFitnessScore = originalImage.getHeight() * originalImage.getWidth();
         BufferedImage modelImage = deepCopy(originalImage);
-        ArrayList<BufferedImage> mutatedImages = new ArrayList<>();
-        //Artificial cap, so that the programm can stop even if fitness != 0
-        int bestFitnessScore = getFitness(offspring.get(0));
+        boolean atLeastOneModelImage = false;
         while(fitness > 0) {
-            mutatedImages = new ArrayList<>();
-            if(generations >= 500) {
+            ArrayList<BufferedImage> mutatedImages = new ArrayList<>();
+            if(generations > 50) {
                 break;
             }
-
-
-            for(int j = 0; j < offspring.size(); j++) {
-                //images mutate
-                for(int i = 0; i < (int) mutationRate; i++) {
-                    double fixMutationRate = (mutationRate * 10);
-                    if(fixMutationRate >= getRandomNumber(0, 10)) {
-                        mutatedImages.add(deepCopy(mutate(offspring.get(j))));
-                    }
-                }
-
-                //calculating fitness values + setting new model image
-                int temporaryFitnessScore = getFitness(deepCopy(mutatedImages.get(j)));
-                if(temporaryFitnessScore < bestFitnessScore) {
-                    bestFitnessScore = temporaryFitnessScore;
-                    modelImage = deepCopy(mutatedImages.get(j));
+            for(BufferedImage img : offspring) {
+                BufferedImage mutatedImage = mutate(deepCopy(img));
+                mutatedImages.add(deepCopy(mutatedImage));
+                int fitnessScoreOfImg = getFitness(deepCopy(mutatedImage));
+                if(fitnessScoreOfImg < bestFitnessScore) {
+                    bestFitnessScore = fitnessScoreOfImg;
+                    fitness = bestFitnessScore;
+                    modelImage = deepCopy(mutatedImage);
+                    System.out.println("BestFitnessOfImg: " + bestFitnessScore);
+                    atLeastOneModelImage = true;
                 }
             }
-            //creating new offspring off of modelImage
-            fitness = bestFitnessScore;
-            //offspring = (List<BufferedImage>) mutatedImages.clone();
+            if(atLeastOneModelImage) {
+                listOfModelImages.add(deepCopy(modelImage));
+            }
+            System.out.println("Size: " + listOfModelImages.size());
             createOffSpring(deepCopy(modelImage));
+            System.out.println("Gens: " + generations);
             generations++;
-            listOfModelImages.add(deepCopy(modelImage));
-            System.out.println(fitness);
+            atLeastOneModelImage = false;
         }
         setScaledListOfModelImages();
         return scaledListOfModelImages;
     }
 
     public void createOffSpring(BufferedImage modelImage) {
-        offspring.clear();
+        offspring = new ArrayList<>();
         BufferedImage offspringImage = deepCopy(modelImage);
         for(int i = 0; i < numberOfOffspring; i++) {
             offspring.add(deepCopy(offspringImage));
@@ -171,20 +162,26 @@ public class BildManager {
     public BufferedImage mutate(BufferedImage imageToBeMutated) {
         int randomXCoord = getRandomNumber(0, originalImage.getWidth());
         int randomYCoord = getRandomNumber(0, originalImage.getHeight());
-        int randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size() - 1));
+        int randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()));
 
+        while(randomColour == imageToBeMutated.getRGB(randomXCoord, randomYCoord)) {
+            randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()));
+        }
 
-        BufferedImage mutatedImage = imageToBeMutated;
+        BufferedImage mutatedImage = deepCopy(imageToBeMutated);
         mutatedImage.setRGB(randomXCoord, randomYCoord, randomColour);
         return mutatedImage;
     }
 
     public int getFitness(BufferedImage imageToGetFitness) {
-        int fitnessOfImg = originalImage.getHeight() * originalImage.getWidth();
-        for (int y = 0; y < originalImage.getWidth(); y++) {
-            for (int x = 0; x < originalImage.getHeight(); x++) {
-                if(originalImage.getRGB(x, y) == imageToGetFitness.getRGB(x, y)) {
-                    fitnessOfImg--;
+
+        int fitnessOfImg = 0;
+       // System.out.println("Fitnessofimg: " + fitnessOfImg);
+        for (int y = 0; y < deepCopy(originalImage).getWidth(); y++) {
+            for (int x = 0; x < deepCopy(originalImage).getHeight(); x++) {
+                if(deepCopy(originalImage).getRGB(x, y) != deepCopy(imageToGetFitness).getRGB(x, y)) {
+                   //System.out.println(y +"|"+  x + "FitnessofimgINLOOP: " + fitnessOfImg+ "." + originalImage.getRGB(x, y) + " " + imageToGetFitness.getRGB(x, y));
+                    fitnessOfImg++;
                 }
             }
         }
@@ -215,7 +212,7 @@ public class BildManager {
 
     public void setScaledListOfModelImages() {
         for(BufferedImage image : listOfModelImages) {
-            scaledListOfModelImages.add(scaleImage(image, calculateScale(-1, -1)));
+            scaledListOfModelImages.add(scaleImage(deepCopy(image), calculateScale(-1, -1)));
         }
     }
 
