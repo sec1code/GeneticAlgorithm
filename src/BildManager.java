@@ -14,7 +14,7 @@ public class BildManager {
     //die mutationsrate
     private final double mutationRate = 1.0;
     //die Nummer an "Nachfahren" in der nächsten Generation
-    private final int numberOfOffspring = 500;
+    private final int numberOfOffspring = 100;
     //der Faktor mit dem die Bilder skaliert werden
     private File f;
 
@@ -65,7 +65,7 @@ public class BildManager {
         boolean atLeastOneModelImage = false;
         while(fitness > 0) {
             ArrayList<BufferedImage> mutatedImages = new ArrayList<>();
-            if(generations > 50) {
+            if(generations > 500) {
                 break;
             }
             for(BufferedImage img : offspring) {
@@ -91,6 +91,51 @@ public class BildManager {
         }
         setScaledListOfModelImages();
         return scaledListOfModelImages;
+    }
+
+    //Ein Gen ist definiert als eine x reihe von farben des Bildes
+    //Diese Methode gibt eine Liste mit allen Genen des Input Bildes zurück
+    //NOCH NICHT DEBUGGED
+    public ArrayList<Integer[]> getGenes(BufferedImage imageToGetGenes) {
+        BufferedImage geneImage = deepCopy(imageToGetGenes);
+
+        ArrayList<Integer> gene = new ArrayList<>();
+        ArrayList<Integer[]> genes = new ArrayList<>();
+        for (int y = 0; y < geneImage.getHeight(); y++) {
+            for (int x = 0; x < geneImage.getWidth(); x++) {
+                int colourOfSpot = geneImage.getRGB(x, y);
+                gene.add(colourOfSpot);
+            }
+            Integer[] geneAsArray = gene.toArray(new Integer[gene.size()]);
+            genes.add(geneAsArray);
+            gene.clear();
+        }
+        return genes;
+    }
+
+    public BufferedImage crossover(BufferedImage parent1, BufferedImage parent2) {
+        ArrayList<Integer[]> genesOfParent1 = getGenes(parent1);
+        ArrayList<Integer[]> genesOfParent2 = getGenes(parent2);
+
+        BufferedImage imageToBeCrossovered = createNewImage();
+        ArrayList<Integer[]> genesOfChild = new ArrayList<>();
+
+        for(int i = 0; i < originalImage.getWidth(); i++) {
+            //Gibt 1 oder 2 zurück; 1 -> parent1 / 2 -> parent2
+            int parent = getRandomNumber(1,3);
+            if(parent == 1) {
+                genesOfChild.add(genesOfParent1.get(i));
+            } else {
+                genesOfChild.add(genesOfParent2.get(i));
+            }
+        }
+
+        for (int y = 0; y < originalImage.getHeight(); y++) {
+            for (int x = 0; x < originalImage.getWidth(); x++) {
+                imageToBeCrossovered.setRGB(x, y, genesOfChild.get(y)[x]);
+            }
+        }
+        return imageToBeCrossovered;
     }
 
     public void createOffSpring(BufferedImage modelImage) {
@@ -149,8 +194,8 @@ public class BildManager {
 
     private BufferedImage randomizeImage(BufferedImage imageToBeRandomized) {
         BufferedImage rtrnImage = deepCopy(imageToBeRandomized);
-        for (int y = 0; y < originalImage.getWidth(); y++) {
-            for (int x = 0; x < originalImage.getHeight(); x++) {
+        for (int y = 0; y < originalImage.getHeight(); y++) {
+            for (int x = 0; x < originalImage.getWidth(); x++) {
                 //System.out.println(x + "|" + y);
                 int colour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()-1));
                 rtrnImage.setRGB(y, x, colour);
@@ -177,8 +222,8 @@ public class BildManager {
 
         int fitnessOfImg = 0;
        // System.out.println("Fitnessofimg: " + fitnessOfImg);
-        for (int y = 0; y < deepCopy(originalImage).getWidth(); y++) {
-            for (int x = 0; x < deepCopy(originalImage).getHeight(); x++) {
+        for (int y = 0; y < deepCopy(originalImage).getHeight(); y++) {
+            for (int x = 0; x < deepCopy(originalImage).getWidth(); x++) {
                 if(deepCopy(originalImage).getRGB(x, y) != deepCopy(imageToGetFitness).getRGB(x, y)) {
                    //System.out.println(y +"|"+  x + "FitnessofimgINLOOP: " + fitnessOfImg+ "." + originalImage.getRGB(x, y) + " " + imageToGetFitness.getRGB(x, y));
                     fitnessOfImg++;
@@ -216,8 +261,7 @@ public class BildManager {
         }
     }
 
-    public BufferedImage convertToBufferedImage(Image image)
-    {
+    public BufferedImage convertToBufferedImage(Image image) {
         BufferedImage newImage = new BufferedImage(
                 image.getWidth(null), image.getHeight(null),
                 BufferedImage.TYPE_INT_ARGB);
