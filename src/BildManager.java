@@ -40,7 +40,7 @@ public class BildManager {
     public BildManager() {
         offspring = new ArrayList<>();
         try {
-            originalImage = readImage("D:/Sergej/Sergej Schule/P5/Bilder/Testing/Test7.png");
+            originalImage = readImage("D:/Sergej/Sergej Schule/P5/Bilder/Testing/sixteen.png");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -57,11 +57,18 @@ public class BildManager {
         listOfModelImages = new ArrayList<>();
         scaledListOfModelImages = new ArrayList<>();
     }
-
+/*if (num > max1st) {
+        max2nd = max1st;
+        max1st = num;
+    } else if (num > max2nd) {
+        max2nd = num;
+    }*/
     // returns the modelImage
     public List<BufferedImage> simulate() {
         int bestFitnessScore = originalImage.getHeight() * originalImage.getWidth();
-        BufferedImage modelImage = deepCopy(originalImage);
+        int secondBestFitnessScore = originalImage.getHeight() * originalImage.getWidth() + 1;
+        BufferedImage parent1 = deepCopy(originalImage);
+        BufferedImage parent2 = deepCopy(originalImage);
         boolean atLeastOneModelImage = false;
         while(fitness > 0) {
             ArrayList<BufferedImage> mutatedImages = new ArrayList<>();
@@ -69,22 +76,27 @@ public class BildManager {
                 break;
             }
             for(BufferedImage img : offspring) {
+
                 BufferedImage mutatedImage = mutate(deepCopy(img));
                 mutatedImages.add(deepCopy(mutatedImage));
                 int fitnessScoreOfImg = getFitness(deepCopy(mutatedImage));
                 if(fitnessScoreOfImg < bestFitnessScore) {
+                    secondBestFitnessScore = bestFitnessScore;
                     bestFitnessScore = fitnessScoreOfImg;
                     fitness = bestFitnessScore;
-                    modelImage = deepCopy(mutatedImage);
+                    parent1 = deepCopy(mutatedImage);
                     System.out.println("BestFitnessOfImg: " + bestFitnessScore);
                     atLeastOneModelImage = true;
+                } else if (fitnessScoreOfImg < secondBestFitnessScore) {
+                    secondBestFitnessScore = fitnessScoreOfImg;
+                    parent2 = deepCopy(mutatedImage);
                 }
             }
             if(atLeastOneModelImage) {
-                listOfModelImages.add(deepCopy(modelImage));
+                listOfModelImages.add(deepCopy(parent1));
             }
             System.out.println("Size: " + listOfModelImages.size());
-            createOffSpring(deepCopy(modelImage));
+            newCreateOffSpring(deepCopy(parent1), deepCopy(parent2));
             System.out.println("Gens: " + generations);
             generations++;
             atLeastOneModelImage = false;
@@ -143,6 +155,13 @@ public class BildManager {
         BufferedImage offspringImage = deepCopy(modelImage);
         for(int i = 0; i < numberOfOffspring; i++) {
             offspring.add(deepCopy(offspringImage));
+        }
+    }
+
+    public void newCreateOffSpring(BufferedImage parent1, BufferedImage parent2) {
+        offspring = new ArrayList<>();
+        for(int i = 0; i < numberOfOffspring; i++) {
+            offspring.add(deepCopy(crossover(deepCopy(parent1), deepCopy(parent2))));
         }
     }
 
