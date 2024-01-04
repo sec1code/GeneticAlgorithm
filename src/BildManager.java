@@ -6,16 +6,29 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
 public class BildManager {
+
+    //Diese 3 Werte, bestimmen welche Funktionen angewendet werden sollen. Es Gibt alternativen zu jedem.
+    private final int mutationFunktion = 1;
+    private final int fitnessFunktion = 1;
+    private final int crossoverFunktion = 1;
+
+
     //die mutationsrate
-    private final double mutationRate = 1.0;
+    private final int mutationRate = 1;
+    //eine fixe Mutation Zahl, welche genause viele Pixel pro Bild mutiert
+    private final int fixMutation = 1;
     //die Nummer an "Nachfahren" in der nächsten Generation
     private final int numberOfOffspring = 100;
-    //der Faktor mit dem die Bilder skaliert werden
+    //der "harte" Cap bei den Generationen
+    private final int hartCapGeneration = 500;
+
+    private ArrayList<int[]> dynamicValues;
     private File f;
 
     //um ehrlich zu sein, ich weiß nicht mehr, wozu es diese Liste gibt.
@@ -25,7 +38,7 @@ public class BildManager {
     //der wert der die fitness des derzeitigen Model Bilds beschreibt
     private int fitness;
     //selbsterklärend, einfach die derzeitige Generation.
-    private int generations = 1;
+    private int generations;
     //das originale/vorher gegebene Bild
     private BufferedImage originalImage;
 
@@ -40,10 +53,11 @@ public class BildManager {
     public BildManager() {
         offspring = new ArrayList<>();
         try {
-            originalImage = readImage("D:/Sergej/Sergej Schule/P5/Bilder/Testing/sixteen.png");
+            originalImage = readImage("D:/Sergej/Sergej Schule/P5/Bilder/Testing/Test7.png");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        generations = 1;
         fitness = originalImage.getHeight() * originalImage.getWidth();
         bildListe = new ArrayList<>();
         colourOfOriginalImage = colourOfOriginalImage();
@@ -56,14 +70,11 @@ public class BildManager {
         }
         listOfModelImages = new ArrayList<>();
         scaledListOfModelImages = new ArrayList<>();
+        dynamicValues = new ArrayList<>();
     }
-/*if (num > max1st) {
-        max2nd = max1st;
-        max1st = num;
-    } else if (num > max2nd) {
-        max2nd = num;
-    }*/
-    // returns the modelImage
+
+
+    //Hauptfunktionen des Algorithmus
     public List<BufferedImage> simulate() {
         int bestFitnessScore = originalImage.getHeight() * originalImage.getWidth();
         int secondBestFitnessScore = originalImage.getHeight() * originalImage.getWidth() + 1;
@@ -72,12 +83,12 @@ public class BildManager {
         boolean atLeastOneModelImage = false;
         while(fitness > 0) {
             ArrayList<BufferedImage> mutatedImages = new ArrayList<>();
-            if(generations > 500) {
+            if(generations > hartCapGeneration) {
                 break;
             }
             for(BufferedImage img : offspring) {
 
-                BufferedImage mutatedImage = mutate(deepCopy(img));
+                BufferedImage mutatedImage = mutationsFunktionFix(deepCopy(img));
                 mutatedImages.add(deepCopy(mutatedImage));
                 int fitnessScoreOfImg = getFitness(deepCopy(mutatedImage));
                 if(fitnessScoreOfImg < bestFitnessScore) {
@@ -94,6 +105,7 @@ public class BildManager {
             }
             if(atLeastOneModelImage) {
                 listOfModelImages.add(deepCopy(parent1));
+                dynamicValues.add(new int[]{generations, fitness});
             }
             System.out.println("Size: " + listOfModelImages.size());
             newCreateOffSpring(deepCopy(parent1), deepCopy(parent2));
@@ -104,27 +116,23 @@ public class BildManager {
         setScaledListOfModelImages();
         return scaledListOfModelImages;
     }
+    public BufferedImage mutationsFunktionFix(BufferedImage imageToBeMutated) {
+        BufferedImage mutatedImage = deepCopy(imageToBeMutated);
 
-    //Ein Gen ist definiert als eine x reihe von farben des Bildes
-    //Diese Methode gibt eine Liste mit allen Genen des Input Bildes zurück
-    //NOCH NICHT DEBUGGED
-    public ArrayList<Integer[]> getGenes(BufferedImage imageToGetGenes) {
-        BufferedImage geneImage = deepCopy(imageToGetGenes);
+        for(int i = 0; i < fixMutation; i++) {
+            int randomXCoord = getRandomNumber(0, originalImage.getWidth());
+            int randomYCoord = getRandomNumber(0, originalImage.getHeight());
+            int randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()));
 
-        ArrayList<Integer> gene = new ArrayList<>();
-        ArrayList<Integer[]> genes = new ArrayList<>();
-        for (int y = 0; y < geneImage.getHeight(); y++) {
-            for (int x = 0; x < geneImage.getWidth(); x++) {
-                int colourOfSpot = geneImage.getRGB(x, y);
-                gene.add(colourOfSpot);
+            while(randomColour == imageToBeMutated.getRGB(randomXCoord, randomYCoord)) {
+                randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()));
             }
-            Integer[] geneAsArray = gene.toArray(new Integer[gene.size()]);
-            genes.add(geneAsArray);
-            gene.clear();
-        }
-        return genes;
-    }
 
+            mutatedImage.setRGB(randomXCoord, randomYCoord, randomColour);
+        }
+
+        return mutatedImage;
+    }
     public BufferedImage crossover(BufferedImage parent1, BufferedImage parent2) {
         ArrayList<Integer[]> genesOfParent1 = getGenes(parent1);
         ArrayList<Integer[]> genesOfParent2 = getGenes(parent2);
@@ -149,21 +157,109 @@ public class BildManager {
         }
         return imageToBeCrossovered;
     }
-
-    public void createOffSpring(BufferedImage modelImage) {
-        offspring = new ArrayList<>();
-        BufferedImage offspringImage = deepCopy(modelImage);
-        for(int i = 0; i < numberOfOffspring; i++) {
-            offspring.add(deepCopy(offspringImage));
-        }
-    }
-
     public void newCreateOffSpring(BufferedImage parent1, BufferedImage parent2) {
         offspring = new ArrayList<>();
         for(int i = 0; i < numberOfOffspring; i++) {
             offspring.add(deepCopy(crossover(deepCopy(parent1), deepCopy(parent2))));
         }
     }
+
+
+
+    //Funktionen die etwas mit dem Algorithmus zu tun haben, jedoch keine Hauptfunktionen sind
+
+    public ArrayList<Integer[]> getGenes(BufferedImage imageToGetGenes) {
+        BufferedImage geneImage = deepCopy(imageToGetGenes);
+
+        ArrayList<Integer> gene = new ArrayList<>();
+        ArrayList<Integer[]> genes = new ArrayList<>();
+        for (int y = 0; y < geneImage.getHeight(); y++) {
+            for (int x = 0; x < geneImage.getWidth(); x++) {
+                int colourOfSpot = geneImage.getRGB(x, y);
+                gene.add(colourOfSpot);
+            }
+            Integer[] geneAsArray = gene.toArray(new Integer[gene.size()]);
+            genes.add(geneAsArray);
+            gene.clear();
+        }
+        return genes;
+    }
+    public int getFitness(BufferedImage imageToGetFitness) {
+
+        int fitnessOfImg = 0;
+        // System.out.println("Fitnessofimg: " + fitnessOfImg);
+        for (int y = 0; y < deepCopy(originalImage).getHeight(); y++) {
+            for (int x = 0; x < deepCopy(originalImage).getWidth(); x++) {
+                if(deepCopy(originalImage).getRGB(x, y) != deepCopy(imageToGetFitness).getRGB(x, y)) {
+                    //System.out.println(y +"|"+  x + "FitnessofimgINLOOP: " + fitnessOfImg+ "." + originalImage.getRGB(x, y) + " " + imageToGetFitness.getRGB(x, y));
+                    fitnessOfImg++;
+                }
+            }
+        }
+        return fitnessOfImg;
+    }
+    public BufferedImage createNewImage() {
+        System.out.println("hier");
+        BufferedImage newImage = new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        return randomizeImage(newImage);
+    }
+
+    private List<Integer> colourOfOriginalImage() {
+        for (int y = 0; y < originalImage.getWidth(); y++) {
+            for (int x = 0; x < originalImage.getHeight(); x++) {
+                int colour = originalImage.getRGB(y, x);
+                System.out.println(colour);
+                if (!(colourOfOriginalImage.contains(colour))) {
+                    colourOfOriginalImage.add(colour);
+                }
+            }
+        }
+        return colourOfOriginalImage;
+    }
+    private BufferedImage randomizeImage(BufferedImage imageToBeRandomized) {
+        BufferedImage rtrnImage = deepCopy(imageToBeRandomized);
+        for (int y = 0; y < originalImage.getHeight(); y++) {
+            for (int x = 0; x < originalImage.getWidth(); x++) {
+                //System.out.println(x + "|" + y);
+                int colour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()-1));
+                rtrnImage.setRGB(y, x, colour);
+            }
+        }
+        return rtrnImage;
+    }
+    public int getRandomNumber(int min, int max) {
+        return (int) ((Math.random() * (max - min)) + min);
+    }
+
+    //Dynamic values:
+
+    //Best Fitness
+    //Generations + Hart Cap
+
+    //Static values:
+
+    //Number Of Offspring
+    //Mutation Rate
+    //Fix Mutation
+    //Mutation Funktion (es gibt verschiedene)
+    //Fitness Funktion (es gibt verschiedene)
+    //Crossover Funktion (es gibt verschiedene)
+
+    public int[] getStaticValues() {
+        if(mutationFunktion == 1) {
+            return new int[] {numberOfOffspring, fixMutation, mutationFunktion, fitnessFunktion, crossoverFunktion, hartCapGeneration};
+        } else { //mutationFunktion == 2
+            return new int[] {numberOfOffspring, mutationRate, mutationFunktion, fitnessFunktion, crossoverFunktion, hartCapGeneration};
+        }
+
+    }
+    public ArrayList<int[]> getDynamicValues() {
+        return dynamicValues;
+    }
+
+
+
+    //Setup Funktionen, die dafür nötig sind, dass das Programm laufen kann, aber nichts mit dem Algorithmus zu tun haben.
 
     public BufferedImage readImage(String imgPath) throws IOException {
         //  Bild lesen und zur liste hinzufügen
@@ -176,8 +272,6 @@ public class BildManager {
         }
         return null;
     }
-
-    //den pfad für alle bilder durchgehen
     public void loadBildListe() {
         //D:/Sergej/Sergej Schule/P5/Bilder/Testing/Test.png <- das ist der Grundpfad
         String path = "";
@@ -192,109 +286,11 @@ public class BildManager {
         }
     }
 
-    public BufferedImage createNewImage() {
-        System.out.println("hier");
-        BufferedImage newImage = new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-        return randomizeImage(newImage);
-    }
-
-    private List<Integer> colourOfOriginalImage() {
-        for (int y = 0; y < originalImage.getWidth(); y++) {
-            for (int x = 0; x < originalImage.getHeight(); x++) {
-                int colour = originalImage.getRGB(y, x);
-                System.out.println(colour);
-                if (!(colourOfOriginalImage.contains(colour))) {
-                      colourOfOriginalImage.add(colour);
-                }
-            }
-        }
-        return colourOfOriginalImage;
-    }
-
-    private BufferedImage randomizeImage(BufferedImage imageToBeRandomized) {
-        BufferedImage rtrnImage = deepCopy(imageToBeRandomized);
-        for (int y = 0; y < originalImage.getHeight(); y++) {
-            for (int x = 0; x < originalImage.getWidth(); x++) {
-                //System.out.println(x + "|" + y);
-                int colour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()-1));
-                rtrnImage.setRGB(y, x, colour);
-            }
-        }
-        return rtrnImage;
-    }
-
-    public BufferedImage mutate(BufferedImage imageToBeMutated) {
-        int randomXCoord = getRandomNumber(0, originalImage.getWidth());
-        int randomYCoord = getRandomNumber(0, originalImage.getHeight());
-        int randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()));
-
-        while(randomColour == imageToBeMutated.getRGB(randomXCoord, randomYCoord)) {
-            randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()));
-        }
-
-        BufferedImage mutatedImage = deepCopy(imageToBeMutated);
-        mutatedImage.setRGB(randomXCoord, randomYCoord, randomColour);
-        return mutatedImage;
-    }
-
-    public int getFitness(BufferedImage imageToGetFitness) {
-
-        int fitnessOfImg = 0;
-       // System.out.println("Fitnessofimg: " + fitnessOfImg);
-        for (int y = 0; y < deepCopy(originalImage).getHeight(); y++) {
-            for (int x = 0; x < deepCopy(originalImage).getWidth(); x++) {
-                if(deepCopy(originalImage).getRGB(x, y) != deepCopy(imageToGetFitness).getRGB(x, y)) {
-                   //System.out.println(y +"|"+  x + "FitnessofimgINLOOP: " + fitnessOfImg+ "." + originalImage.getRGB(x, y) + " " + imageToGetFitness.getRGB(x, y));
-                    fitnessOfImg++;
-                }
-            }
-        }
-        return fitnessOfImg;
-    }
-    public BufferedImage getOrginalImageSized() {
-        return scaleImage(originalImage, calculateScale(500, 50));
-    }
-
-    public List<BufferedImage> getImageList() {
-        return bildListe;
-    }
-
-    public BufferedImage getImageByIndex(int index){
-        return bildListe.get(index);
-    }
-
-    public int getRandomNumber(int min, int max) {
-        return (int) ((Math.random() * (max - min)) + min);
-    }
-
-    public BufferedImage scaleImage(BufferedImage imageToBeScaled, int scaleFactor) {
-        int w = imageToBeScaled.getWidth();
-        int h = imageToBeScaled.getHeight();
-        Image newImage = deepCopy(imageToBeScaled).getScaledInstance(w * scaleFactor, h * scaleFactor, Image.SCALE_DEFAULT);
-        return convertToBufferedImage(newImage);
-    }
-
-    public void setScaledListOfModelImages() {
-        for(BufferedImage image : listOfModelImages) {
-            scaledListOfModelImages.add(scaleImage(deepCopy(image), calculateScale(-1, -1)));
-        }
-    }
-
-    public BufferedImage convertToBufferedImage(Image image) {
-        BufferedImage newImage = new BufferedImage(
-                image.getWidth(null), image.getHeight(null),
-                BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = newImage.createGraphics();
-        g.drawImage(image, 0, 0, null);
-        g.dispose();
-        return newImage;
-    }
-
     public int calculateScale(int tempWidth, int tempHeight) {
         int tempoWidth = tempWidth;
         int tempoHeight = tempHeight;
-        final int DEFAULTWIDTH = 1400;
-        final int DEFAULTHEIGHT = 700;
+        final int DEFAULTWIDTH = 500;
+        final int DEFAULTHEIGHT = 500;
         if(tempWidth < 0 ||tempHeight < 0) {
             tempoWidth = DEFAULTWIDTH;
             tempoHeight = DEFAULTHEIGHT;
@@ -318,19 +314,58 @@ public class BildManager {
         }
         return temporaryScaleFactor - 1;
     }
+    public BufferedImage scaleImage(BufferedImage imageToBeScaled, int scaleFactor) {
+        int w = imageToBeScaled.getWidth();
+        int h = imageToBeScaled.getHeight();
+        Image newImage = deepCopy(imageToBeScaled).getScaledInstance(w * scaleFactor, h * scaleFactor, Image.SCALE_DEFAULT);
+        return convertToBufferedImage(newImage);
+    }
+    public void setScaledListOfModelImages() {
+        for(BufferedImage image : listOfModelImages) {
+            scaledListOfModelImages.add(scaleImage(deepCopy(image), calculateScale(-1, -1)));
+        }
+    }
+    public BufferedImage getOrginalImageSized() {
+        return scaleImage(deepCopy(originalImage), calculateScale(-1, -1));
+    }
+    public List<BufferedImage> getImageList() {
+        return bildListe;
+    }
+
+    public BufferedImage convertToBufferedImage(Image image) {
+        BufferedImage newImage = new BufferedImage(
+                image.getWidth(null), image.getHeight(null),
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = newImage.createGraphics();
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+        return newImage;
+    }
     private BufferedImage deepCopy(BufferedImage bi) {
         ColorModel cm = bi.getColorModel();
         boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
         WritableRaster raster = bi.copyData(null);
         return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
+    public BufferedImage getImageByIndex(int index){
+        return bildListe.get(index);
+    }
 
+
+
+    //Outdated/Debug Funktionen + Nützliche Kommentare
     public List<BufferedImage> getScaledListOfModelImages() {
         return scaledListOfModelImages;
     }
-
     public void test() {
         System.out.println(listOfModelImages.size());
+    }
+    public void createOffSpring(BufferedImage modelImage) {
+        offspring = new ArrayList<>();
+        BufferedImage offspringImage = deepCopy(modelImage);
+        for(int i = 0; i < numberOfOffspring; i++) {
+            offspring.add(deepCopy(offspringImage));
+        }
     }
 
     /*    int clr = image.getRGB(x, y);
@@ -340,4 +375,11 @@ public class BildManager {
     System.out.println("Red Color value = " + red);
     System.out.println("Green Color value = " + green);
     System.out.println("Blue Color value = " + blue);*/
+
+    /*if (num > max1st) {
+        max2nd = max1st;
+        max1st = num;
+    } else if (num > max2nd) {
+        max2nd = num;
+    }*/
 }

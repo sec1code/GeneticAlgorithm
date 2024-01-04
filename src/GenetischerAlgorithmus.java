@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenetischerAlgorithmus extends JFrame{
-
-
     private int imageIndex = 0;
     private BildManager bildManager = new BildManager();
     private List<BufferedImage> listOfModelImages = bildManager.simulate();
@@ -19,15 +17,18 @@ public class GenetischerAlgorithmus extends JFrame{
     private JPanel mainPanel;
     private JPanel BildPanel;
     private JPanel ButtonPanel;
+    private BorderLayout layoutForBildPanel = new BorderLayout();
     private JButton start;
     private JButton rewind;
     private JButton forward;
     private JButton end;
 
-
+    private boolean mutation = true;
 
     public GenetischerAlgorithmus() {
-
+        layoutForBildPanel.setHgap(50);
+        layoutForBildPanel.setVgap(20);
+        BildPanel.setLayout(layoutForBildPanel);
         setContentPane(mainPanel);
         setFocusable(false);
         setTitle("Genetischer Algorithmus");
@@ -41,11 +42,26 @@ public class GenetischerAlgorithmus extends JFrame{
     }
 
     private void run() {
-        JLabel bild = new JLabel(new ImageIcon(bildManager.getImageByIndex(imageIndex)));
+
+        int[] staticInfo = bildManager.getStaticValues();
+        if(staticInfo[2]==1) {
+            mutation = false;
+        }
+
+        ArrayList<int[]> dynamicInfo = bildManager.getDynamicValues();
+        JLabel infoText = new JLabel();
+
+       setText(infoText, staticInfo, dynamicInfo, imageIndex);
+
+        JLabel bild = new JLabel(new ImageIcon(listOfModelImages.get(0)));
         JLabel originalBild = new JLabel(new ImageIcon(bildManager.getOrginalImageSized()));
+
         originalBild.setSize(500, 500);
         bild.setSize(1400, 700);
-        BildPanel.add(bild);
+
+        BildPanel.add(infoText, BorderLayout.CENTER);
+        BildPanel.add(bild, BorderLayout.EAST);
+        BildPanel.add(originalBild, BorderLayout.WEST);
 
         forward.addActionListener(new ActionListener() {
             @Override
@@ -56,7 +72,7 @@ public class GenetischerAlgorithmus extends JFrame{
 
                 System.out.println("ImageIndex: " + imageIndex);
                 bild.setIcon(new ImageIcon(listOfModelImages.get(imageIndex)));
-
+                setText(infoText, staticInfo, dynamicInfo, imageIndex);
             }
         });
 
@@ -67,6 +83,7 @@ public class GenetischerAlgorithmus extends JFrame{
                     imageIndex--;
                 }
                 bild.setIcon(new ImageIcon(listOfModelImages.get(imageIndex)));
+                setText(infoText, staticInfo, dynamicInfo, imageIndex);
             }
         });
 
@@ -76,6 +93,7 @@ public class GenetischerAlgorithmus extends JFrame{
                 imageIndex = 0;
                 //bild.setIcon(new ImageIcon(bildManager.getImageByIndex(imageIndex)));
                 bild.setIcon(new ImageIcon(listOfModelImages.get(0)));
+                setText(infoText, staticInfo, dynamicInfo, imageIndex);
             }
         });
 
@@ -84,8 +102,22 @@ public class GenetischerAlgorithmus extends JFrame{
             public void actionPerformed(ActionEvent arg0) {
                 imageIndex = listOfModelImages.size() - 1;
                 bild.setIcon(new ImageIcon(listOfModelImages.get(imageIndex)));
+                setText(infoText, staticInfo, dynamicInfo, imageIndex);
             }
         });
+    }
+
+    private void setText(JLabel infoText, int[] staticInfo, ArrayList<int[]> dynamicInfo, int imageIndex) {
+        String mutationsTyp = "Mutations Rate: ";
+        if(mutation) {
+            mutationsTyp = "Fixe Mutations: ";
+        }
+
+        infoText.setText("<html><body>Fitness Funktion: "+ staticInfo[3] + "<br>Crossover Funktion: " + staticInfo[4] +
+                "<br>Mutations Funktion: "+ staticInfo[2] + "<br>" + mutationsTyp + staticInfo[1] +
+                "<br>Zahl der Individuen: " + staticInfo[0] + "<br>Generationen: " + dynamicInfo.get(imageIndex)[0] + ", harter Cap bei: "+ staticInfo[5] +
+                "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild</body></html>");
+
     }
 
 
