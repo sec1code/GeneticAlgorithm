@@ -113,8 +113,8 @@ public class GenetischerAlgorithmus extends JFrame{
         }
 
         infoText.setText("<html><body>Mutations Funktion: "+ staticInfo[2] + "<br>" + mutationsTyp + staticInfo[1] +
-                "<br>Zahl der Individuen: " + staticInfo[0] + "<br>Generationen: " + dynamicInfo.get(imageIndex)[0] + ", harter Cap bei: "+ staticInfo[3] +
-                "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Fehler Quotient: " + dynamicInfo.get(imageIndex)[2] + "%, Cap bei: " + staticInfo[4] + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
+                "<br>Zahl der Individuen: " + staticInfo[0] + "<br>Generation: " + dynamicInfo.get(imageIndex)[0] + ", harter Cap bei: "+ staticInfo[3] +
+                "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Aktuelle Differenz zum Originalbild: " + dynamicInfo.get(imageIndex)[2] + "%, Cap bei: " + staticInfo[4] + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
 
     }
 
