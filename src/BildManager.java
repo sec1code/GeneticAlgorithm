@@ -5,59 +5,37 @@ import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.Buffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-
 import javax.imageio.ImageIO;
 
 public class BildManager {
-    //Ab wie viel Prozent Ähnlichkeit zum Original bild abgebrochen werden soll
-    private final int fehlerQuotient = 1;
-
-    //Diese 3 Werte, bestimmen welche Funktionen angewendet werden sollen. Es Gibt alternativen zu jedem.
-    private final int mutationFunktion = 1; //1 == "mutationsFunktionFix" / 2 == "mutationsRateFunktion"
-    private final int fitnessFunktion = 1;
-    private final int crossoverFunktion = 1; //1 == "crossoverGen" / 2 == "crossoverPixel"
-
-
-    //die mutationsrate
-    private final int mutationRate = 1; // 1 - 100
-    //eine fixe Mutation Zahl, welche genause viele Pixel pro Bild mutiert
+    //Diese Variablen lassen sich einstellen
+    private final int mutationFunktion = 1;
+    private final int mutationRate = 1;
     private final int fixMutation = 1;
-    //die Nummer an "Nachfahren" in der nächsten Generation
     private final int numberOfOffspring = 500;
-    //der "harte" Cap bei den Generationen
+    private final int fehlerQuotient = 1;
     private final int hartCapGeneration = 500;
+
 
     private ArrayList<int[]> dynamicValues;
     private File f;
-
-    //um ehrlich zu sein, ich weiß nicht mehr, wozu es diese Liste gibt.
     private List<BufferedImage> bildListe;
     private List<Integer> colourOfOriginalImage = new ArrayList<>();
 
-    //der wert der die fitness des derzeitigen Model Bilds beschreibt
     private int fitness;
-    //selbsterklärend, einfach die derzeitige Generation.
     private int generations;
-    //das originale/vorher gegebene Bild
     private BufferedImage originalImage;
-
-    //das vorbild bild / das zurzeit beste bild
 
     private List<BufferedImage> offspring;
 
-    //List der Bilder die als Vorbild für eine Generation genommen wurden
     private List<BufferedImage> listOfModelImages;
-    //die gleichen Bilder wie oben, nur skaliert auf eine nutzbare Größe
     private List<BufferedImage> scaledListOfModelImages;
     public BildManager() {
         offspring = new ArrayList<>();
         try {
-            originalImage = readImage("D:/Sergej/Sergej Schule/P5/Bilder/Testing/Test7.png");
+            originalImage = readImage("D:/Sergej/Sergej Schule/P5/Bilder/Testing/Test7.png"); //Pfad des Bildes hier eingeben
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -66,7 +44,7 @@ public class BildManager {
         bildListe = new ArrayList<>();
         colourOfOriginalImage = colourOfOriginalImage();
         f = null;
-        loadBildListe();
+        //loadBildListe();
 
         BufferedImage randomImage = randomizeImage(deepCopy(originalImage));
         for(int i = 0; i < numberOfOffspring; i++) {
@@ -105,7 +83,6 @@ public class BildManager {
                     bestFitnessScore = fitnessScoreOfImg;
                     fitness = bestFitnessScore;
                     parent1 = deepCopy(mutatedImage);
-                    System.out.println("BestFitnessOfImg: " + bestFitnessScore);
                     atLeastOneModelImage = true;
                 } else if (fitnessScoreOfImg < secondBestFitnessScore) {
                     secondBestFitnessScore = fitnessScoreOfImg;
@@ -116,9 +93,7 @@ public class BildManager {
                 listOfModelImages.add(deepCopy(parent1));
                 dynamicValues.add(new int[]{generations, fitness, getFehlerQuotient()});
             }
-            System.out.println("Size: " + listOfModelImages.size());
             newCreateOffSpring(deepCopy(parent1), deepCopy(parent2));
-            System.out.println("Gens: " + generations);
             generations++;
             atLeastOneModelImage = false;
         }
@@ -191,33 +166,13 @@ public class BildManager {
         return imageToBeCrossovered;
     }
 
-    public BufferedImage crossoverPixel(BufferedImage parent1, BufferedImage parent2) {
-        ArrayList<Integer> pixelOfParent1 = getPixel(parent1);
-        ArrayList<Integer> pixelOfParent2 = getPixel(parent2);
-
-        BufferedImage imageToBeCrossovered = createNewImage();
-
-        for (int y = 0; y < originalImage.getHeight(); y++) {
-            for (int x = 0; x < originalImage.getWidth(); x++) {
-                int parent = getRandomNumber(1,3);
-                if(parent == 1) {
-                    imageToBeCrossovered.setRGB(x, y, pixelOfParent1.get(x+y));
-                } else { //parent == 2
-                    imageToBeCrossovered.setRGB(x, y, pixelOfParent2.get(x+y));
-                }
-            }
-        }
-        return imageToBeCrossovered;
-    }
 
     public void newCreateOffSpring(BufferedImage parent1, BufferedImage parent2) {
         offspring = new ArrayList<>();
         for(int i = 0; i < numberOfOffspring; i++) {
-            if(crossoverFunktion == 1) {
-                offspring.add(deepCopy(crossoverGen(deepCopy(parent1), deepCopy(parent2))));
-            } else { //crossoverFunktion == 2
-                offspring.add(deepCopy(crossoverPixel(deepCopy(parent1), deepCopy(parent2))));
-            }
+
+            offspring.add(deepCopy(crossoverGen(deepCopy(parent1), deepCopy(parent2))));
+
         }
     }
 
@@ -256,11 +211,9 @@ public class BildManager {
     public int getFitness(BufferedImage imageToGetFitness) {
 
         int fitnessOfImg = 0;
-        // System.out.println("Fitnessofimg: " + fitnessOfImg);
         for (int y = 0; y < deepCopy(originalImage).getHeight(); y++) {
             for (int x = 0; x < deepCopy(originalImage).getWidth(); x++) {
                 if(deepCopy(originalImage).getRGB(x, y) != deepCopy(imageToGetFitness).getRGB(x, y)) {
-                    //System.out.println(y +"|"+  x + "FitnessofimgINLOOP: " + fitnessOfImg+ "." + originalImage.getRGB(x, y) + " " + imageToGetFitness.getRGB(x, y));
                     fitnessOfImg++;
                 }
             }
@@ -268,7 +221,6 @@ public class BildManager {
         return fitnessOfImg;
     }
     public BufferedImage createNewImage() {
-        System.out.println("hier");
         BufferedImage newImage = new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), BufferedImage.TYPE_INT_RGB);
         return randomizeImage(newImage);
     }
@@ -277,7 +229,6 @@ public class BildManager {
         for (int y = 0; y < originalImage.getWidth(); y++) {
             for (int x = 0; x < originalImage.getHeight(); x++) {
                 int colour = originalImage.getRGB(y, x);
-                System.out.println(colour);
                 if (!(colourOfOriginalImage.contains(colour))) {
                     colourOfOriginalImage.add(colour);
                 }
@@ -291,7 +242,7 @@ public class BildManager {
             for (int x = 0; x < originalImage.getWidth(); x++) {
                 //System.out.println(x + "|" + y);
                 int colour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()-1));
-                rtrnImage.setRGB(y, x, colour);
+                rtrnImage.setRGB(x, y, colour);
             }
         }
         return rtrnImage;
@@ -306,25 +257,11 @@ public class BildManager {
         return fq.intValue();
     }
 
-    //Dynamic values:
-
-    //Best Fitness
-    //Generations + Hart Cap
-
-    //Static values:
-
-    //Number Of Offspring
-    //Mutation Rate
-    //Fix Mutation
-    //Mutation Funktion (es gibt verschiedene)
-    //Fitness Funktion (es gibt verschiedene)
-    //Crossover Funktion (es gibt verschiedene)
-
     public int[] getStaticValues() {
         if(mutationFunktion == 1) {
-            return new int[] {numberOfOffspring, fixMutation, mutationFunktion, fitnessFunktion, crossoverFunktion, hartCapGeneration, fehlerQuotient};
+            return new int[] {numberOfOffspring, fixMutation, mutationFunktion, hartCapGeneration, fehlerQuotient};
         } else { //mutationFunktion == 2
-            return new int[] {numberOfOffspring, mutationRate, mutationFunktion, fitnessFunktion, crossoverFunktion, hartCapGeneration, fehlerQuotient};
+            return new int[] {numberOfOffspring, mutationRate, mutationFunktion, hartCapGeneration, fehlerQuotient};
         }
 
     }
@@ -337,7 +274,6 @@ public class BildManager {
     //Setup Funktionen, die dafür nötig sind, dass das Programm laufen kann, aber nichts mit dem Algorithmus zu tun haben.
 
     public BufferedImage readImage(String imgPath) throws IOException {
-        //  Bild lesen und zur liste hinzufügen
         try {
             f = new File(imgPath);
             return ImageIO.read(f);
@@ -346,19 +282,6 @@ public class BildManager {
             System.out.println(e);
         }
         return null;
-    }
-    public void loadBildListe() {
-        //D:/Sergej/Sergej Schule/P5/Bilder/Testing/Test.png <- das ist der Grundpfad
-        String path = "";
-        for(int i = 0; i < 4; i++) {
-            path = "D:/Sergej/Sergej Schule/P5/Bilder/Testing/Test" + Integer.valueOf(i+1).toString() + ".png";
-            try {
-                bildListe.add(readImage(path));
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
     }
 
     public int calculateScale(int tempWidth, int tempHeight) {
@@ -374,16 +297,16 @@ public class BildManager {
         int temporaryHeight = originalImage.getHeight();
         int temporaryWidth = originalImage.getWidth();
         while(temporaryWidth <= tempoWidth && temporaryHeight <= tempoHeight) {
-            //increment the scaleFactor;
+
             temporaryScaleFactor++;
 
-            //reset to normal width and height
+
             if(temporaryScaleFactor!=1) {
                 temporaryWidth = originalImage.getWidth();
                 temporaryHeight = originalImage.getHeight();
             }
 
-            //update the temporary width and height
+
             temporaryWidth*=temporaryScaleFactor;
             temporaryHeight*=temporaryScaleFactor;
         }
@@ -422,39 +345,5 @@ public class BildManager {
         WritableRaster raster = bi.copyData(null);
         return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
-    public BufferedImage getImageByIndex(int index){
-        return bildListe.get(index);
-    }
 
-
-
-    //Outdated/Debug Funktionen + Nützliche Kommentare
-    public List<BufferedImage> getScaledListOfModelImages() {
-        return scaledListOfModelImages;
-    }
-    public void test() {
-        System.out.println(listOfModelImages.size());
-    }
-    public void createOffSpring(BufferedImage modelImage) {
-        offspring = new ArrayList<>();
-        BufferedImage offspringImage = deepCopy(modelImage);
-        for(int i = 0; i < numberOfOffspring; i++) {
-            offspring.add(deepCopy(offspringImage));
-        }
-    }
-
-    /*    int clr = image.getRGB(x, y);
-    int red = (clr & 0x00ff0000) >> 16;
-    int green = (clr & 0x0000ff00) >> 8;
-    int blue = clr & 0x000000ff;
-    System.out.println("Red Color value = " + red);
-    System.out.println("Green Color value = " + green);
-    System.out.println("Blue Color value = " + blue);*/
-
-    /*if (num > max1st) {
-        max2nd = max1st;
-        max1st = num;
-    } else if (num > max2nd) {
-        max2nd = num;
-    }*/
 }
