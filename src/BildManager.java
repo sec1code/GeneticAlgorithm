@@ -196,18 +196,6 @@ public class BildManager {
         }
         return genes;
     }
-
-    public ArrayList<Integer> getPixel(BufferedImage imageToGetPixel) {
-        BufferedImage pixelImage = deepCopy(imageToGetPixel);
-        ArrayList<Integer> pixel = new ArrayList<>();
-        for (int y = 0; y < deepCopy(originalImage).getHeight(); y++) {
-            for (int x = 0; x < deepCopy(originalImage).getWidth(); x++) {
-                int colourOfSpot = pixelImage.getRGB(x, y);
-                pixel.add(colourOfSpot);
-            }
-        }
-       return pixel;
-    }
     public int getFitness(BufferedImage imageToGetFitness) {
 
         int fitnessOfImg = 0;
