@@ -44,7 +44,6 @@ public class BildManager {
         bildListe = new ArrayList<>();
         colourOfOriginalImage = colourOfOriginalImage();
         f = null;
-        //loadBildListe();
 
         BufferedImage randomImage = randomizeImage(deepCopy(originalImage));
         for(int i = 0; i < numberOfOffspring; i++) {
@@ -148,7 +147,7 @@ public class BildManager {
         BufferedImage imageToBeCrossovered = createNewImage();
         ArrayList<Integer[]> genesOfChild = new ArrayList<>();
 
-        for(int i = 0; i < originalImage.getWidth(); i++) {
+        for(int i = 0; i < originalImage.getHeight(); i++) {
             //Gibt 1 oder 2 zurück; 1 -> parent1 / 2 -> parent2
             int parent = getRandomNumber(1,3);
             if(parent == 1) {
