@@ -13,12 +13,12 @@ import javax.imageio.ImageIO;
 
 public class BildManager {
     //Diese Variablen lassen sich einstellen
-    private final int mutationFunktion = 2;
-    private final double mutationRate = 1.01;
+    private final int ausgewählteMutationsFunktion = 2;
+    private final double mutationsRate = 1.01;
     private final int fixMutation = 1;
-    private final int numberOfOffspring = 500;
-    private final int fehlerQuotient = 1;
-    private final int hartCapGeneration = 500;
+    private final int individuenProGeneration = 500;
+    private final int differenzZumOriginalBild = 1;
+    private final int maximaleGeneration = 500;
 
 
     private ArrayList<int[]> dynamicValues;
@@ -48,7 +48,7 @@ public class BildManager {
         f = null;
 
         BufferedImage randomImage = randomizeImage(deepCopy(originalImage));
-        for(int i = 0; i < numberOfOffspring; i++) {
+        for(int i = 0; i < individuenProGeneration; i++) {
             offspring.add(deepCopy(deepCopy(randomImage)));
         }
         listOfModelImages = new ArrayList<>();
@@ -64,16 +64,16 @@ public class BildManager {
         BufferedImage parent1 = deepCopy(originalImage);
         BufferedImage parent2 = deepCopy(originalImage);
         boolean atLeastOneModelImage = false;
-        while(fitness > 0 && !(getFehlerQuotient()<=fehlerQuotient)) {
+        while(fitness > 0 && !(getFehlerQuotient()<=differenzZumOriginalBild)) {
             ArrayList<BufferedImage> mutatedImages = new ArrayList<>();
-            if(generations > hartCapGeneration) {
+            if(generations > maximaleGeneration) {
                 break;
             }
             BufferedImage mutatedImage = createNewImage();
             for(BufferedImage img : offspring) {
-                if(mutationFunktion == 1) {
+                if(ausgewählteMutationsFunktion == 1) {
                     mutatedImage = mutationsFunktionFix(deepCopy(img));
-                } else { //mutationFunktion == 2
+                } else { //ausgewählteMutationsFunktion == 2
                     mutatedImage = mutationsRateFunktion(deepCopy(img));
                 }
 
@@ -121,7 +121,7 @@ public class BildManager {
         return mutatedImage;
     }
 
-    //Bei dieser Funktion hat jeder Pixel im Bild, eine Chance zur Mutation, diese Chance ist gleich der Variable "mutationRate" in Prozent.
+    //Bei dieser Funktion hat jeder Pixel im Bild, eine Chance zur Mutation, diese Chance ist gleich der Variable "mutationsRate" in Prozent.
     public BufferedImage mutationsRateFunktion(BufferedImage imageToBeMutated) {
         BufferedImage mutatedImage = deepCopy(imageToBeMutated);
 
@@ -129,7 +129,7 @@ public class BildManager {
             for (int x = 0; x < deepCopy(originalImage).getWidth(); x++) {
                 double percentage = getRndmDouble(100.00000000000001, 0);
 
-                if(mutationRate + 0.00000000000001 >=percentage) {
+                if(mutationsRate + 0.00000000000001 >=percentage) {
                     int randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()));
 
                     while(randomColour == imageToBeMutated.getRGB(x, y)) {
@@ -170,7 +170,7 @@ public class BildManager {
 
     public void newCreateOffSpring(BufferedImage parent1, BufferedImage parent2) {
         offspring = new ArrayList<>();
-        for(int i = 0; i < numberOfOffspring; i++) {
+        for(int i = 0; i < individuenProGeneration; i++) {
 
             offspring.add(deepCopy(crossoverGen(deepCopy(parent1), deepCopy(parent2))));
 
@@ -251,10 +251,10 @@ public class BildManager {
     }
 
     public double[] getStaticValues() {
-        if(mutationFunktion == 1) {
-            return new double[] {numberOfOffspring, fixMutation, mutationFunktion, hartCapGeneration, fehlerQuotient};
-        } else { //mutationFunktion == 2
-            return new double[] {numberOfOffspring, mutationRate, mutationFunktion, hartCapGeneration, fehlerQuotient};
+        if(ausgewählteMutationsFunktion == 1) {
+            return new double[] {individuenProGeneration, fixMutation, ausgewählteMutationsFunktion, maximaleGeneration, differenzZumOriginalBild};
+        } else { //ausgewählteMutationsFunktion == 2
+            return new double[] {individuenProGeneration, mutationsRate, ausgewählteMutationsFunktion, maximaleGeneration, differenzZumOriginalBild};
         }
 
     }

@@ -44,7 +44,6 @@ public class GenetischerAlgorithmus extends JFrame{
     private void run() {
 
         double[] staticInfo = bildManager.getStaticValues();
-        System.out.println(((int)staticInfo[2]) + " :::::");
         if(((int)staticInfo[2]) == 1) {
             mutation = true;
         }
