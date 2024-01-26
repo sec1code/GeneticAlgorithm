@@ -7,12 +7,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import javax.imageio.ImageIO;
 
 public class BildManager {
     //Diese Variablen lassen sich einstellen
-    private final int mutationFunktion = 1;
-    private final int mutationRate = 1;
+    private final int mutationFunktion = 2;
+    private final double mutationRate = 1.01;
     private final int fixMutation = 1;
     private final int numberOfOffspring = 500;
     private final int fehlerQuotient = 1;
@@ -125,9 +127,9 @@ public class BildManager {
 
         for (int y = 0; y < deepCopy(originalImage).getHeight(); y++) {
             for (int x = 0; x < deepCopy(originalImage).getWidth(); x++) {
-                int percentage = getRandomNumber(1, 101);
+                double percentage = getRndmDouble(100.00000000000001, 0);
 
-                if(mutationRate>=percentage) {
+                if(mutationRate + 0.00000000000001 >=percentage) {
                     int randomColour = colourOfOriginalImage.get(getRandomNumber(0, colourOfOriginalImage.size()));
 
                     while(randomColour == imageToBeMutated.getRGB(x, y)) {
@@ -237,6 +239,10 @@ public class BildManager {
     public int getRandomNumber(int min, int max) {
         return (int) ((Math.random() * (max - min)) + min);
     }
+    private double getRndmDouble(double max, double min) {
+        double randomValue = ThreadLocalRandom.current().nextDouble(min, max);
+        return randomValue;
+    }
 
     public int getFehlerQuotient() {
         int originalFitness = originalImage.getWidth() * originalImage.getHeight();
@@ -244,11 +250,11 @@ public class BildManager {
         return fq.intValue();
     }
 
-    public int[] getStaticValues() {
+    public double[] getStaticValues() {
         if(mutationFunktion == 1) {
-            return new int[] {numberOfOffspring, fixMutation, mutationFunktion, hartCapGeneration, fehlerQuotient};
+            return new double[] {numberOfOffspring, fixMutation, mutationFunktion, hartCapGeneration, fehlerQuotient};
         } else { //mutationFunktion == 2
-            return new int[] {numberOfOffspring, mutationRate, mutationFunktion, hartCapGeneration, fehlerQuotient};
+            return new double[] {numberOfOffspring, mutationRate, mutationFunktion, hartCapGeneration, fehlerQuotient};
         }
 
     }

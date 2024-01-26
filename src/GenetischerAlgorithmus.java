@@ -23,7 +23,7 @@ public class GenetischerAlgorithmus extends JFrame{
     private JButton forward;
     private JButton end;
 
-    private boolean mutation = true;
+    private boolean mutation = false;
 
     public GenetischerAlgorithmus() {
         layoutForBildPanel.setHgap(50);
@@ -43,9 +43,10 @@ public class GenetischerAlgorithmus extends JFrame{
 
     private void run() {
 
-        int[] staticInfo = bildManager.getStaticValues();
-        if(staticInfo[2]==1) {
-            mutation = false;
+        double[] staticInfo = bildManager.getStaticValues();
+        System.out.println(((int)staticInfo[2]) + " :::::");
+        if(((int)staticInfo[2]) == 1) {
+            mutation = true;
         }
 
         ArrayList<int[]> dynamicInfo = bildManager.getDynamicValues();
@@ -106,15 +107,19 @@ public class GenetischerAlgorithmus extends JFrame{
         });
     }
 
-    private void setText(JLabel infoText, int[] staticInfo, ArrayList<int[]> dynamicInfo, int imageIndex) {
-        String mutationsTyp = "Mutations Rate: ";
+    private void setText(JLabel infoText, double[] staticInfo, ArrayList<int[]> dynamicInfo, int imageIndex) {
         if(mutation) {
-            mutationsTyp = "Fixe Mutations: ";
+            infoText.setText("<html><body>Mutations Funktion: "+ ((int) staticInfo[2]) + "<br>" + "Fixe Mutation: " + ((int)staticInfo[1]) +
+                    "<br>Zahl der Individuen: " + ((int)staticInfo[0]) + "<br>Generation: " + dynamicInfo.get(imageIndex)[0] + ", harter Cap bei: "+ ((int)staticInfo[3]) +
+                    "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Aktuelle Differenz zum Originalbild: " + dynamicInfo.get(imageIndex)[2] + "%, Cap bei: " + ((int)staticInfo[4]) + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
+
+        } else {
+            infoText.setText("<html><body>Mutations Funktion: "+ ((int) staticInfo[2]) + "<br>" + "Mutations Rate: " + staticInfo[1] + "%" +
+                    "<br>Zahl der Individuen: " + ((int)staticInfo[0]) + "<br>Generation: " + dynamicInfo.get(imageIndex)[0] + ", harter Cap bei: "+ ((int)staticInfo[3]) +
+                    "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Aktuelle Differenz zum Originalbild: " + dynamicInfo.get(imageIndex)[2] + "%, Cap bei: " + ((int)staticInfo[4]) + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
+
         }
 
-        infoText.setText("<html><body>Mutations Funktion: "+ staticInfo[2] + "<br>" + mutationsTyp + staticInfo[1] +
-                "<br>Zahl der Individuen: " + staticInfo[0] + "<br>Generation: " + dynamicInfo.get(imageIndex)[0] + ", harter Cap bei: "+ staticInfo[3] +
-                "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Aktuelle Differenz zum Originalbild: " + dynamicInfo.get(imageIndex)[2] + "%, Cap bei: " + staticInfo[4] + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
 
     }
 
