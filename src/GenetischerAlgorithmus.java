@@ -109,13 +109,13 @@ public class GenetischerAlgorithmus extends JFrame{
     private void setText(JLabel infoText, double[] staticInfo, ArrayList<int[]> dynamicInfo, int imageIndex) {
         if(mutation) {
             infoText.setText("<html><body>Mutations Funktion: "+ ((int) staticInfo[2]) + "<br>" + "Fixe Mutation: " + ((int)staticInfo[1]) +
-                    "<br>Zahl der Individuen: " + ((int)staticInfo[0]) + "<br>Generation: " + dynamicInfo.get(imageIndex)[0] + ", harter Cap bei: "+ ((int)staticInfo[3]) +
-                    "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Aktuelle Differenz zum Originalbild: " + dynamicInfo.get(imageIndex)[2] + "%, Cap bei: " + ((int)staticInfo[4]) + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
+                    "<br>Zahl der Individuen: " + ((int)staticInfo[0]) + "<br>Generation: " + dynamicInfo.get(imageIndex)[0] + ", Abbruch bei: "+ ((int)staticInfo[3]) +
+                    "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Aktuelle Differenz zum Originalbild: " + dynamicInfo.get(imageIndex)[2] + "%, Abbruch bei: " + ((int)staticInfo[4]) + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
 
         } else {
             infoText.setText("<html><body>Mutations Funktion: "+ ((int) staticInfo[2]) + "<br>" + "Mutations Rate: " + staticInfo[1] + "%" +
-                    "<br>Zahl der Individuen: " + ((int)staticInfo[0]) + "<br>Generation: " + dynamicInfo.get(imageIndex)[0] + ", harter Cap bei: "+ ((int)staticInfo[3]) +
-                    "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Aktuelle Differenz zum Originalbild: " + dynamicInfo.get(imageIndex)[2] + "%, Cap bei: " + ((int)staticInfo[4]) + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
+                    "<br>Zahl der Individuen: " + ((int)staticInfo[0]) + "<br>Generation: " + dynamicInfo.get(imageIndex)[0] + ", Abbruch bei: "+ ((int)staticInfo[3]) +
+                    "<br>Beste Fitness: " + dynamicInfo.get(imageIndex)[1] +"<br>Aktuelle Differenz zum Originalbild: " + dynamicInfo.get(imageIndex)[2] + "%, Abbruch bei: " + ((int)staticInfo[4]) + "%" + "<br>Links zu sehen ist das Original Bild, rechts zu sehen ist das bisher beste Bild.</body></html>");
 
         }
 

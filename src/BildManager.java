@@ -12,7 +12,7 @@ import javax.imageio.ImageIO;
 
 public class BildManager {
     //Diese Variablen lassen sich einstellen
-    private final int ausgewählteMutationsFunktion = 2;
+    private final int ausgewählteMutationsFunktion = 1;
     private final double mutationsRate = 1.01;
     private final int fixMutation = 1;
     private final int individuenProGeneration = 500;
@@ -36,7 +36,7 @@ public class BildManager {
     public BildManager() {
         offspring = new ArrayList<>();
         try {
-            originalImage = readImage("D:/Sergej/Sergej Schule/P5/Bilder/Testing/Test7.png"); //Pfad des Bildes hier eingeben
+            originalImage = readImage("F:/TestBilder/8x8Bild2.png"); //Pfad des Bildes hier eingeben
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
